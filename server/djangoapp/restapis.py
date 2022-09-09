@@ -46,19 +46,17 @@ def post_request(url, json_payload, **kwargs):
 def get_dealers_from_cf(url, **kwargs):
     results = []
     # Call get_request with a URL parameter
-    json_result = get_request(url)
+    json_result = get_request(url, None)
     if json_result:
         # Get the row list in JSON as dealers
-        dealers = json_result["rows"]
+        dealers = json_result["dealerships"]
         # For each dealer object
         for dealer in dealers:
-            # Get its content in `doc` object
-            dealer_doc = dealer["doc"]
             # Create a CarDealer object with values in `doc` object
-            dealer_obj = CarDealer(address=dealer_doc["address"], city=dealer_doc["city"], full_name=dealer_doc["full_name"],
-                                   id=dealer_doc["id"], lat=dealer_doc["lat"], long=dealer_doc["long"],
-                                   short_name=dealer_doc["short_name"],
-                                   st=dealer_doc["st"], zip=dealer_doc["zip"])
+            dealer_obj = CarDealer(address=dealer["address"], city=dealer["city"], full_name=dealer["full_name"],
+                                   id=dealer["id"], lat=dealer["lat"], long=dealer["long"],
+                                   short_name=dealer["short_name"],
+                                   st=dealer["st"], zip=dealer["zip"])
             results.append(dealer_obj)
 
     return results
@@ -70,26 +68,24 @@ def get_dealers_from_cf(url, **kwargs):
 def get_dealer_reviews_from_cf(url, dealerId, **kwargs):
     results = []
     # Call get_request with a URL parameter
-    json_result = get_request(url, dealerId=dealerId)
+    json_result = get_request(url, None, dealerId=dealerId)
     if json_result:
         # Get the row list in JSON as dealers
-        dealer_reviews = json_result["rows"]
+        dealer_reviews = json_result["reviews"]
         # For each dealer object
         for dealer_review in dealer_reviews:
-            # Get its content in `doc` object
-            dealer_review_doc = dealer["doc"]
             # Create a CarDealer object with values in `doc` object
             dealer_review_obj = DealerReview(
-                dealer_review_doc["dealership"],
-                dealer_review_doc["name"],
-                dealer_review_doc["purchase"],
-                dealer_review_doc["review"],
-                dealer_review_doc["purchase_date"],
-                dealer_review_doc["car_make"],
-                dealer_review_doc["car_model"],
-                dealer_review_doc["car_year"],
-                analyze_review_sentiments(dealer_review_doc["review"], version = "2022-04-07", features ="sentiment", return_analyzed_text=True),
-                dealer_review_doc["id"])
+                dealer_review["dealership"],
+                dealer_review["name"],
+                dealer_review["purchase"],
+                dealer_review["review"],
+                dealer_review["purchase_date"],
+                dealer_review["car_make"],
+                dealer_review["car_model"],
+                dealer_review["car_year"],
+                analyze_review_sentiments(dealer_review["review"], version = "2022-04-07", features ="sentiment", return_analyzed_text=True),
+                dealer_review["id"])
 
             results.append(dealer_review_obj)
 
@@ -102,7 +98,7 @@ def get_dealer_reviews_from_cf(url, dealerId, **kwargs):
 # - Get the returned sentiment label such as Positive or Negative
 def analyze_review_sentiments(dealerreview, **kwargs):
     params = dict()
-    params["text"] = kwargs["text"]
+    params["text"] = dealerreview
     params["version"] = kwargs["version"]
     params["features"] = kwargs["features"]
     params["return_analyzed_text"] = kwargs["return_analyzed_text"]

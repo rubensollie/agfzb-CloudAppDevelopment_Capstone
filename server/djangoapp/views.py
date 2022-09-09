@@ -3,12 +3,13 @@ from django.http import HttpResponseRedirect, HttpResponse
 from django.contrib.auth.models import User
 from django.shortcuts import get_object_or_404, render, redirect
 from .models import CarModel
-from .restapis import get_dealers_from_cf, get_dealer_reviews_from_cf
+from .restapis import get_dealers_from_cf, get_dealer_reviews_from_cf, post_request
 from django.contrib.auth import login, logout, authenticate
 from django.contrib import messages
 from datetime import datetime
 import logging
 import json
+import uuid
 
 # Get an instance of a logger
 logger = logging.getLogger(__name__)
@@ -82,42 +83,40 @@ def registration_request(request):
             login(request, user)
             return redirect("djangoapp:index")
         else:
-            return render(request, 'onlinecourse/registration.html', context)
+            return render(request, 'djangoapp/registration.html', context)
     
 
 # Update the `get_dealerships` view to render the index page with a list of dealerships
 def get_dealerships(request):
     if request.method == "GET":
-        url = "{TODO}/dealer-get"
+        url = "https://eu-gb.functions.appdomain.cloud/api/v1/web/rubensollie%40gmail.com_djangoserver-space/capstone/get_dealerships"
         # Get dealers from the URL
         dealerships = get_dealers_from_cf(url)
-        # Concat all dealer's short name
-        dealer_names = ' '.join([dealer.short_name for dealer in dealerships])
+        context = { "dealerships": dealerships }
         # Return a list of dealer short name
-        return HttpResponse(dealer_names)
+        return render(request, 'djangoapp/index.html', context)
 
 # Create a `get_dealer_details` view to render the reviews of a dealer
 # def get_dealer_details(request, dealer_id):
 # ...
 def get_dealer_details(request, dealer_id):
     if request.method == "GET":
-        url = "{TODO}/dealerships/reviews-get"
+        url = "https://eu-gb.functions.appdomain.cloud/api/v1/web/rubensollie%40gmail.com_djangoserver-space/capstone/get_reviews"
         # Get dealers from the URL
-        reviews = get_dealer_reviews_from_cf(url)
+        reviews = get_dealer_reviews_from_cf(url, dealer_id)
+        context = { "reviews": reviews, "dealer_id": dealer_id }
         # Return a list of dealer short name
-        return HttpResponse(reviews)
+        return render(request, 'djangoapp/dealer_details.html', context)
 
 # Create a `add_review` view to submit a review
 # def add_review(request, dealer_id):
 # ...
-def add_review(request, dealer_name, dealer_id):    
+def add_review(request, dealer_id):    
     if request.method == "GET":
-        cars = CarModel.objects.all()
+        cars = CarModel.objects.filter(dealer_id=dealer_id)
         context = {}
         context["cars"] = cars
-        context["dealer_name"] = dealer_name
         context["dealer_id"] = dealer_id
-        print(context)
         return render(request, 'djangoapp/add_review.html', context)
     elif request.method == "POST":
         if request.user.is_authenticated:
@@ -130,11 +129,11 @@ def add_review(request, dealer_name, dealer_id):
             car = CarModel.objects.get(pk=request.POST.get("car"))
             review["purchase_date"] = request.POST.get("purchasedate")
             review["car_make"] = car.make.name
-            review["car_model"] = car.type
+            review["car_model"] = car.name
             review["car_year"] = car.year.strftime("%Y")
             review["id"] = uuid.uuid4().hex[:5].upper()
             json_payload = {"review": review}
-            response = post_request("{TODO}", json_payload, dealerId=dealer_id)
-            return redirect("djangoapp:dealer_details", dealer_name=dealer_name, dealer_id=dealer_id)
+            response = post_request("https://eu-gb.functions.appdomain.cloud/api/v1/web/rubensollie%40gmail.com_djangoserver-space/capstone/add_review", json_payload, dealerId=dealer_id)
+            return redirect("djangoapp:dealer_details", dealer_id=dealer_id)
         else:
             return HttpResponse("User is not logged")

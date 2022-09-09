@@ -5,12 +5,51 @@
     {% load static %}
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.5.0/css/bootstrap-datepicker.css" rel="stylesheet">
-    <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.js"></script>
+    <script
+    src="https://code.jquery.com/jquery-2.2.4.min.js"
+    integrity="sha256-BbhdlvQf/xTY9gja0Dq3HiwQF8LaCRTXxZKRutelT44="
+    crossorigin="anonymous"></script>
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.5.0/js/bootstrap-datepicker.js"></script>
 
 </head>
     <body>
     <!--Add review form here -->
+        <form action="{% url 'djangoapp:add_review' dealer_id %}" method="post">
+            <div class="container">
+            <h1>Add review</h1>
+            <hr>
+            <div class="form-group">
+                <label for="content"><b>Content</b></label>
+                <textarea class="form-control" id="content" name="content" rows="2" required></textarea>
+            </div>
+            <div class="form-group">
+                <label for="purchasecheck"><b>Purchased car before?</b></label>
+                <input class="form-check-input" type="checkbox" name="purchasecheck" id="purchasecheck" />
+            </div>
+            <div class="form-group">
+                <label for="car"><b>Car</b></label>
+                <select name="car" id="car" class="form-select" required>
+                    {% for car in cars %}
+                        <option selected value={{car.id}}>{{car.make.name}} {{car.name}} ({{ car.year|date:"Y" }})</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="purchasedate"><b>Purchase date</b></label>
+                <input class="date-own form-control" type="text" name="purchasedate" id="purchasedate">
+            </div>
+            <div>
+                {% csrf_token %}
+                <button class="btn btn-primary" type="submit">Submit</button>
+            </div>
+            </div>
+        </form>
     </body>
+    
+    <script type="text/javascript">
+        $('.date-own').datepicker({
+           format: 'mm/dd/yyyy'
+        });
+   </script>
 </html>
